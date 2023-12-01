@@ -82,15 +82,22 @@ func maxPosition(p1 Position, p2 Position) Position {
     return p2
 }
 
-func getFirstPosition(line string, num Number) Position {
+func getFirstPosition(line string, num Number, includeSpelled bool) Position {
     literalIdx := strings.Index(line, num.literal)
-    spelledIdx := strings.Index(line, num.spelled)
+    
+    var spelledIdx int = -1
+    if includeSpelled {
+        spelledIdx =  strings.Index(line, num.spelled)
+    }
     return Position{num.value, optionalMin(spelledIdx, literalIdx)}
 }
 
-func getLastPosition(line string, num Number) Position {
+func getLastPosition(line string, num Number, includeSpelled bool) Position {
     literalIdx := strings.LastIndex(line, num.literal)
-    spelledIdx := strings.LastIndex(line, num.spelled)
+    var spelledIdx int = -1
+    if includeSpelled {
+        spelledIdx =  strings.LastIndex(line, num.spelled)
+    }
     return Position{num.value, optionalMax(spelledIdx, literalIdx)}
 }
 
@@ -100,18 +107,21 @@ func main() {
     var sum int = 0
 
     readFile, err := os.Open("input")
-    // readFile, err := os.Open("smallinput")
+    
     check(err)
     fileScanner := bufio.NewScanner(readFile)
     fileScanner.Split(bufio.ScanLines)
   
+    // Part 1 = flase; Part2 = true
+    includeSpelled := false
+
     for fileScanner.Scan() {
         
         line := fileScanner.Text()
         fmt.Println(line)
 
         getF := func(num Number) Position { 
-            return getFirstPosition(line, num)
+            return getFirstPosition(line, num, includeSpelled)
         }
 
         firstPositions := Map(numbers, getF)
@@ -119,7 +129,7 @@ func main() {
         first := firstPos.value
 
         getL := func(num Number) Position { 
-            return getLastPosition(line, num)
+            return getLastPosition(line, num, includeSpelled)
         }
 
         lastPositions := Map(numbers, getL)
