@@ -12,11 +12,73 @@ func check(e error) {
     }
 }
 
-// one, two, three, four, five, six, seven, eight, nine
-var words = []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
-var nums = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
+type MapFunc[A any, B any] func(A) B
+type ReduceFunc[A any, B any] func(B, A) B
+
+func Map[A any, B any](input []A, m MapFunc[A, B]) []B {
+    output := make([]B, len(input))
+    for i, element := range input {
+        output[i] = m(element)
+    }
+    return output
+}
+
+func Reduce[A any, B any](input []A, r ReduceFunc[A, B], init B) B {
+    var output B = init
+    for _, element := range input {
+        output = r(output, element)
+    }
+    return output
+}
+
+type Number struct {
+    value int
+    literal string
+    spelled string
+}
+
+type Position struct {
+    value int
+    idx int
+}
+
+func optionalMin(v1 int, v2 int) int {
+    if v1 == -1 {
+        return v2
+    }
+    if v2 == -1 {
+        return v1
+    }
+    return min(v1, v2)
+}
+
+func optionalMax(v1 int, v2 int) int {
+    if v1 == -1 {
+        return v2
+    }
+    if v2 == -1 {
+        return v1
+    }
+    return max(v1, v2)
+}
+
+func getFirstPosition(line string, num Number) Position {
+    literalIdx := strings.Index(line, num.literal)
+    spelledIdx := strings.Index(line, num.spelled)
+    return Position{num.value, optionalMin(spelledIdx, literalIdx)}
+}
+
+func getLastPosition(line string, num Number) Position {
+    literalIdx := strings.LastIndex(line, num.literal)
+    spelledIdx := strings.LastIndex(line, num.spelled)
+    return Position{num.value, optionalMax(spelledIdx, literalIdx)}
+}
+
 
 func main() {
+    numbers := []Number{{1, "1", "one"}, {2, "2", "two"}, {3, "3", "three"}, {4, "4", "four"}, {5, "5", "five"}, {6, "6", "six"}, {7, "7", "seven"}, {8, "8", "eight"}, {9, "9", "nine"}}
+    var sum int = 0
+
     readFile, err := os.Open("input")
     // readFile, err := os.Open("smallinput")
     check(err)
@@ -24,66 +86,47 @@ func main() {
     fileScanner := bufio.NewScanner(readFile)
     fileScanner.Split(bufio.ScanLines)
   
-    var sum = 0
-
     for fileScanner.Scan() {
         
         line := fileScanner.Text()
         fmt.Println(line)
-        
-        var minIdx, minValue int = -1, -1
-        for idx, w:= range words {
-            wIdx := strings.Index(line, w)
-            
-            if wIdx == -1 {
-                continue
-            }
-            // v += i 
-            if minIdx == -1 || wIdx <= minIdx {
-                minIdx = wIdx
-                minValue = idx+1
-            }
+
+        getF := func(num Number) Position { 
+            return getFirstPosition(line, num)
         }
-        for idx, w:= range nums {
-            wIdx := strings.Index(line, w)
-            if wIdx == -1 {
-                continue
+        minPos := func(p1 Position, p2 Position) Position { 
+            if p1.idx != -1 && p1.idx < p2.idx {
+                return p1
             }
-            // v += i 
-            if minIdx == -1 || wIdx <= minIdx {
-                minIdx = wIdx
-                minValue = idx+1
+            if p2.idx == -1 {
+                return p1
             }
+            return p2
         }
 
-        var maxIdx, maxValue int = -1, -1
-        for idx, w:= range words {
-            wIdx := strings.LastIndex(line, w)
-            
-            if wIdx == -1 {
-                continue
-            }
-            // v += i 
-            if maxIdx == -1 || wIdx >= maxIdx {
-                maxIdx = wIdx
-                maxValue = idx+1
-            }
+        firstPositions := Map(numbers, getF)
+        firstPos := Reduce(firstPositions, minPos, Position{-1, -1})
+        first := firstPos.value
+
+        getL := func(num Number) Position { 
+            return getLastPosition(line, num)
         }
-        for idx, w:= range nums {
-            wIdx := strings.LastIndex(line, w)
-            
-            if wIdx == -1 {
-                continue
+        maxPos := func(p1 Position, p2 Position) Position { 
+            if p1.idx != -1 && p1.idx > p2.idx {
+                return p1
             }
-            // v += i 
-            if maxIdx == -1 || wIdx >= maxIdx {
-                maxIdx = wIdx
-                maxValue = idx+1
+            if p2.idx == -1 {
+                return p1
             }
+            return p2
         }
 
-        sum += minValue*10 + maxValue
-        fmt.Printf("%d\n", minValue*10 + maxValue)
+        lastPositions := Map(numbers, getL)
+        lastPos := Reduce(lastPositions, maxPos, Position{-1, -1})
+        last := lastPos.value
+    
+        value := first * 10 + last
+        sum += value
     }
     fmt.Printf("SUM: %d\n", sum)
   
