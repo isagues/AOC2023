@@ -62,6 +62,26 @@ func optionalMax(v1 int, v2 int) int {
     return max(v1, v2)
 }
 
+func minPosition(p1 Position, p2 Position) Position { 
+    if p1.idx != -1 && p1.idx < p2.idx {
+        return p1
+    }
+    if p2.idx == -1 {
+        return p1
+    }
+    return p2
+}
+
+func maxPosition(p1 Position, p2 Position) Position { 
+    if p1.idx != -1 && p1.idx > p2.idx {
+        return p1
+    }
+    if p2.idx == -1 {
+        return p1
+    }
+    return p2
+}
+
 func getFirstPosition(line string, num Number) Position {
     literalIdx := strings.Index(line, num.literal)
     spelledIdx := strings.Index(line, num.spelled)
@@ -82,7 +102,6 @@ func main() {
     readFile, err := os.Open("input")
     // readFile, err := os.Open("smallinput")
     check(err)
-    
     fileScanner := bufio.NewScanner(readFile)
     fileScanner.Split(bufio.ScanLines)
   
@@ -94,39 +113,20 @@ func main() {
         getF := func(num Number) Position { 
             return getFirstPosition(line, num)
         }
-        minPos := func(p1 Position, p2 Position) Position { 
-            if p1.idx != -1 && p1.idx < p2.idx {
-                return p1
-            }
-            if p2.idx == -1 {
-                return p1
-            }
-            return p2
-        }
 
         firstPositions := Map(numbers, getF)
-        firstPos := Reduce(firstPositions, minPos, Position{-1, -1})
+        firstPos := Reduce(firstPositions, minPosition, Position{-1, -1})
         first := firstPos.value
 
         getL := func(num Number) Position { 
             return getLastPosition(line, num)
         }
-        maxPos := func(p1 Position, p2 Position) Position { 
-            if p1.idx != -1 && p1.idx > p2.idx {
-                return p1
-            }
-            if p2.idx == -1 {
-                return p1
-            }
-            return p2
-        }
 
         lastPositions := Map(numbers, getL)
-        lastPos := Reduce(lastPositions, maxPos, Position{-1, -1})
+        lastPos := Reduce(lastPositions, maxPosition, Position{-1, -1})
         last := lastPos.value
     
-        value := first * 10 + last
-        sum += value
+        sum += first * 10 + last
     }
     fmt.Printf("SUM: %d\n", sum)
   
