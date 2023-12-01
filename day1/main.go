@@ -4,7 +4,6 @@ import (
     "fmt"
     "os"
     "bufio"
-    "unicode"
     "strings"
 )
 func check(e error) {
@@ -15,10 +14,11 @@ func check(e error) {
 
 // one, two, three, four, five, six, seven, eight, nine
 var words = []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
+var nums = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
 
 func main() {
-    // readFile, err := os.Open("input")
     readFile, err := os.Open("input")
+    // readFile, err := os.Open("smallinput")
     check(err)
     
     fileScanner := bufio.NewScanner(readFile)
@@ -28,59 +28,62 @@ func main() {
 
     for fileScanner.Scan() {
         
-        var sb strings.Builder
         line := fileScanner.Text()
         fmt.Println(line)
         
-        for i := 0; i < len(line); i++ {
-            var fIndex [9]int
-            for w_idx, w:= range words {
-                fIndex[w_idx] = strings.Index(line[i:], w)
-                // fmt.Printf("fIndex = %d; w= %s, w_indx= %d\n", fIndex[w_idx], w, w_idx)
+        var minIdx, minValue int = -1, -1
+        for idx, w:= range words {
+            wIdx := strings.Index(line, w)
+            
+            if wIdx == -1 {
+                continue
             }
-
-            // fmt.Print(values)
-            var minIdx int = -1
-            var min int = fIndex[0]
-            for k, v := range fIndex {
-                if v == -1 {
-                    continue
-                }
-                // v += i 
-                if minIdx == -1 || v <= min {
-                    min = v
-                    minIdx = k
-                }
-            }
-
-            if min == 0 && minIdx >= 0 {
-                i += len(words[minIdx])-1
-                sb.WriteByte(byte(minIdx) + 1 + '0')
-            } else {
-                sb.WriteByte(line[i])
+            // v += i 
+            if minIdx == -1 || wIdx <= minIdx {
+                minIdx = wIdx
+                minValue = idx+1
             }
         }
-        
-        transformedLine := sb.String()
-        
-        fmt.Println(transformedLine)
-
-        var first int = -1
-        var last int = -1
-
-        for _, c := range (transformedLine) {
-            if unicode.IsDigit(c) {
-                num := int(c - '0')
-                if first == -1 {
-                    first = num
-                }
-                last = num
-
+        for idx, w:= range nums {
+            wIdx := strings.Index(line, w)
+            if wIdx == -1 {
+                continue
+            }
+            // v += i 
+            if minIdx == -1 || wIdx <= minIdx {
+                minIdx = wIdx
+                minValue = idx+1
             }
         }
 
-        sum += first*10 + last
-        fmt.Printf("%d\n", first*10 + last)
+        var maxIdx, maxValue int = -1, -1
+        for idx, w:= range words {
+            wIdx := strings.LastIndex(line, w)
+            
+            if wIdx == -1 {
+                continue
+            }
+            // v += i 
+            if maxIdx == -1 || wIdx >= maxIdx {
+                maxIdx = wIdx
+                maxValue = idx+1
+            }
+        }
+        for idx, w:= range nums {
+            wIdx := strings.LastIndex(line, w)
+            
+            if wIdx == -1 {
+                continue
+            }
+            // v += i 
+            if maxIdx == -1 || wIdx >= maxIdx {
+                maxIdx = wIdx
+                maxValue = idx+1
+            }
+        }
+
+        sum += minValue*10 + maxValue
+        fmt.Printf("%d\n", minValue*10 + maxValue)
     }
     fmt.Printf("SUM: %d\n", sum)
   
