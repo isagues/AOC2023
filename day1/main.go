@@ -5,6 +5,7 @@ import (
     "os"
     "bufio"
     "unicode"
+    "strings"
 )
 func check(e error) {
     if e != nil {
@@ -13,36 +14,73 @@ func check(e error) {
 }
 
 // one, two, three, four, five, six, seven, eight, nine
+var words = []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
 
 func main() {
+    // readFile, err := os.Open("input")
     readFile, err := os.Open("input")
     check(err)
     
     fileScanner := bufio.NewScanner(readFile)
- 
     fileScanner.Split(bufio.ScanLines)
   
     var sum = 0
 
     for fileScanner.Scan() {
-        var f int = -1
-        var l int = -1
-        var n int = -1
         
+        var sb strings.Builder
+        line := fileScanner.Text()
+        fmt.Println(line)
+        
+        for i := 0; i < len(line); i++ {
+            var fIndex [9]int
+            for w_idx, w:= range words {
+                fIndex[w_idx] = strings.Index(line[i:], w)
+                // fmt.Printf("fIndex = %d; w= %s, w_indx= %d\n", fIndex[w_idx], w, w_idx)
+            }
 
-        for _, c := range (fileScanner.Text()) {
-            // fmt.Printf("%s :", fileScanner.Text())
-            if unicode.IsDigit(c) {
-                n = int(c - '0')
-                if f == -1 {
-                    f = n
+            // fmt.Print(values)
+            var minIdx int = -1
+            var min int = fIndex[0]
+            for k, v := range fIndex {
+                if v == -1 {
+                    continue
                 }
-                l = n
+                // v += i 
+                if minIdx == -1 || v <= min {
+                    min = v
+                    minIdx = k
+                }
+            }
+
+            if min == 0 && minIdx >= 0 {
+                i += len(words[minIdx])-1
+                sb.WriteByte(byte(minIdx) + 1 + '0')
+            } else {
+                sb.WriteByte(line[i])
+            }
+        }
+        
+        transformedLine := sb.String()
+        
+        fmt.Println(transformedLine)
+
+        var first int = -1
+        var last int = -1
+
+        for _, c := range (transformedLine) {
+            if unicode.IsDigit(c) {
+                num := int(c - '0')
+                if first == -1 {
+                    first = num
+                }
+                last = num
 
             }
         }
-        fmt.Printf("%d%d \n", f, l)
-        sum += f*10 + l
+
+        sum += first*10 + last
+        fmt.Printf("%d\n", first*10 + last)
     }
     fmt.Printf("SUM: %d\n", sum)
   
